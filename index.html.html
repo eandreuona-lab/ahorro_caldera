@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ona Hotels - Cálculo Ahorro Bomba de Calor (TER100)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Paleta de colores corporativa Ona Hotels */
+    :root {
+      --ona-teal-dark: #006B7D;
+      --ona-teal: #008B9C;
+      --ona-teal-light: #00A8BD;
+      --ona-teal-lighter: #E0F4F7;
+      --ona-white: #FFFFFF;
+      --ona-grey-light: #F8F9FA;
+      --ona-grey: #E9ECEF;
+      --ona-grey-dark: #6C757D;
+      --ona-text: #212529;
+      --ona-border: #DEE2E6;
+      --ona-success: #28A745;
+      --ona-warning: #FFC107;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; 
+      padding: 0;
+      background: linear-gradient(135deg, var(--ona-grey-light) 0%, var(--ona-grey) 100%);
+      color: var(--ona-text);
+    }
+
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header con logo */
+    header { 
+      background: var(--ona-white);
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 107, 125, 0.08);
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+
+    header .header-content {
+      flex: 1;
+    }
+
+    header h1 { 
+      margin: 0 0 6px 0; 
+      font-size: 24px; 
+      font-weight: 600;
+      color: var(--ona-teal-dark);
+      line-height: 1.3;
+    }
+
+    header .subtitle {
+      font-size: 13px;
+      color: var(--ona-grey-dark);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    header img { 
+      height: 55px; 
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Tarjetas */
+    .card { 
+      background: var(--ona-white);
+      padding: 24px 28px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 107, 125, 0.08);
+      border: 1px solid var(--ona-border);
+      margin-bottom: 25px;
+    }
+
+    .card h2 { 
+      margin: 0 0 18px 0; 
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ona-teal-dark);
+      border-bottom: 2px solid var(--ona-teal-light);
+      padding-bottom: 8px;
+    }
+
+    .card h3 {
+      margin: 20px 0 12px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ona-teal);
+    }
+
+    /* Formulario */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ona-text);
+      margin-bottom: 6px;
+    }
+
+    label .unit {
+      font-weight: 400;
+      color: var(--ona-grey-dark);
+      font-size: 12px;
+    }
+
+    input, select {
+      padding: 10px 12px;
+      border: 1px solid var(--ona-border);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--ona-teal);
+      box-shadow: 0 0 0 3px var(--ona-teal-lighter);
+    }
+
+    /* Botones */
+    .btn {
+      padding: 11px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--ona-teal);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--ona-teal-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 139, 156, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--ona-grey);
+      color: var(--ona-text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ona-border);
+    }
+
+    .btn-export {
+      background: var(--ona-success);
+      color: white;
+    }
+
+    .btn-export:hover {
+      background: #218838;
+    }
+
+    .btn-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    /* Resumen de resultados */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .summary-item {
+      background: linear-gradient(135deg, var(--ona-teal-light) 0%, var(--ona-teal) 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 139, 156, 0.2);
+    }
+
+    .summary-item.warning {
+      background: linear-gradient(135deg, #FFD54F 0%, var(--ona-warning) 100%);
+      color: var(--ona-text);
+    }
+
+    .summary-item.success {
+      background: linear-gradient(135deg, #66BB6A 0%, var(--ona-success) 100%);
+    }
+
+    .summary-label {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.95;
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .summary-unit {
+      font-size: 14px;
+      font-weight: 400;
+      opacity: 0.9;
+    }
+
+    /* Gráficos */
+    .chart-container {
+      position: relative;
+      height: 350px;
+      margin: 20px 0;
+    }
+
+    /* Metodología */
+    .methodology {
+      background: var(--ona-grey-light);
+      padding: 16px 20px;
+      border-radius: 8px;
+      border-left: 4px solid var(--ona-teal);
+      margin: 20px 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .methodology strong {
+      color: var(--ona-teal-dark);
+    }
+
+    .formula {
+      background: white;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      margin: 10px 0;
+      text-align: center;
+      font-size: 14px;
+      border: 1px solid var(--ona-border);
+    }
+
+    /* Referencias normativas */
+    .reference {
+      background: var(--ona-teal-lighter);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin: 15px 0;
+      border-left: 3px solid var(--ona-teal);
+    }
+
+    .reference strong {
+      color: var(--ona-teal-dark);
+    }
+
+    .info-box {
+      background: #FFF3CD;
+      border-left: 4px solid var(--ona-warning);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin: 15px 0;
+    }
+
+    /* Tabla de parámetros */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      font-size: 13px;
+      margin: 15px 0;
+    }
+
+    thead {
+      background: var(--ona-teal-dark);
+      color: var(--ona-white);
+    }
+
+    th { 
+      padding: 12px 10px; 
+      text-align: left; 
+      font-weight: 600;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    td { 
+      padding: 10px; 
+      border: 1px solid var(--ona-border);
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--ona-grey-light);
+    }
+
+    tbody tr:hover {
+      background: var(--ona-teal-lighter);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 11px;
+      }
+
+      th, td {
+        padding: 8px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <header>
+      <div class="header-content">
+        <h1>Cálculo de Ahorro Energético - Bomba de Calor</h1>
+        <p class="subtitle">Ficha TER100: Sustitución de caldera de combustión por bomba de calor | Sector Terciario</p>
+      </div>
+      <img src="https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/b806f497-fbe0-4b2d-9354-245962d5b1a4" alt="Ona Hotels" />
+    </header>
+
+    <!-- Parámetros del sistema existente -->
+    <div class="card">
+      <h2>🔥 Sistema de Calefacción Existente</h2>
+      
+      <div class="reference">
+        <strong>Normativa aplicable:</strong> Ficha TER100 - Sustitución de caldera de combustión existente por bomba de calor en instalación térmica colectiva (Anexos II-VIII)
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fuelType">Tipo de combustible actual</label>
+          <select id="fuelType">
+            <option value="gasNatural">Gas natural</option>
+            <option value="gasoleo">Gasóleo C</option>
+            <option value="GLP">GLP</option>
+            <option value="carbon">Carbón</option>
+            <option value="biomasa">Biomasa</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="boilerPower">Potencia nominal caldera <span class="unit">(kW)</span></label>
+          <input type="number" id="boilerPower" value="100" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label for="boilerEfficiency">Rendimiento estacional caldera <span class="unit">(%)</span></label>
+          <input type="number" id="boilerEfficiency" value="85" min="0" max="100" step="0.1" />
+        </div>
+
+        <div class="form-group">
+          <label for="fuelPrice">Precio combustible <span class="unit">(€/kWh PCI)</span></label>
+          <input type="number" id="fuelPrice" value="0.06" min="0" step="0.001" />
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>ℹ️ Nota:</strong> El rendimiento estacional incluye pérdidas por distribución, regulación y generación según RITE (valores típicos: calderas estándar 75-85%, calderas condensación 90-95%)
+      </div>
+    </div>
+
+    <!-- Parámetros de la bomba de calor -->
+    <div class="card">
+      <h2>♨️ Nueva Bomba de Calor</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="heatPumpType">Tipo de bomba de calor</label>
+          <select id="heatPumpType">
+            <option value="aireAgua">Aire-Agua</option>
+            <option value="aguaAgua">Agua-Agua (geotermia)</option>
+            <option value="aireAire">Aire-Aire</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="heatPumpPower">Potencia calorífica nominal <span class="unit">(kW)</span></label>
+          <input type="number" id="heatPumpPower" value="100" min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label for="scop">SCOP (Coeficiente estacional) <span class="unit">(-)</span></label>
+          <input type="number" id="scop" value="3.5" min="1" max="10" step="0.1" />
+        </div>
+
+        <div class="form-group">
+          <label for="electricityPrice">Precio electricidad <span class="unit">(€/kWh)</span></label>
+          <input type="number" id="electricityPrice" value="0.15" min="0" step="0.01" />
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>ℹ️ SCOP típicos:</strong> Aire-Agua: 2.5-4.0 | Agua-Agua (geotermia): 4.0-5.5 | Aire-Aire: 3.0-4.5 (según condiciones climáticas zona)
+      </div>
+    </div>
+
+    <!-- Demanda térmica -->
+    <div class="card">
+      <h2>📊 Demanda Térmica del Edificio</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="climateZone">Zona climática <span class="unit">(según Anexo II)</span></label>
+          <select id="climateZone">
+            <option value="A3">A3 - Almería, Málaga</option>
+            <option value="A4">A4 - Cádiz, Sevilla</option>
+            <option value="B3">B3 - Castellón, Valencia</option>
+            <option value="B4">B4 - Murcia, Alicante</option>
+            <option value="C1">C1 - Lugo, Pontevedra</option>
+            <option value="C2">C2 - A Coruña, Asturias</option>
+            <option value="C3" selected>C3 - Tarragona, Barcelona</option>
+            <option value="C4">C4 - Badajoz, Huelva</option>
+            <option value="D1">D1 - León, Palencia</option>
+            <option value="D2">D2 - Cantabria, País Vasco</option>
+            <option value="D3">D3 - Madrid, Zaragoza</option>
+            <option value="E1">E1 - Burgos, Soria</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="buildingType">Tipo de edificio <span class="unit">(según Anexo III)</span></label>
+          <select id="buildingType">
+            <option value="hotel" selected>Hotel</option>
+            <option value="oficina">Oficina</option>
+            <option value="comercio">Comercio</option>
+            <option value="educativo">Educativo</option>
+            <option value="sanitario">Sanitario</option>
+            <option value="residencial">Residencial público</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="heatedArea">Superficie climatizada <span class="unit">(m²)</span></label>
+          <input type="number" id="heatedArea" value="2000" min="0" step="10" />
+        </div>
+
+        <div class="form-group">
+          <label for="annualDemand">Demanda anual calefacción <span class="unit">(kWh/año)</span></label>
+          <input type="number" id="annualDemand" value="150000" min="0" step="1000" />
+        </div>
+      </div>
+
+      <div class="methodology">
+        <strong>Cálculo automático de demanda (opcional):</strong>
+        <p>Si no conoce la demanda anual exacta, puede estimarse como:</p>
+        <div class="formula">
+          Demanda (kWh/año) = Superficie (m²) × DDcalef × 24h
+        </div>
+        <p>Donde DDcalef son los grados-día de calefacción según zona climática (Anexo III)</p>
+      </div>
+    </div>
+
+    <!-- Parámetros adicionales -->
+    <div class="card">
+      <h2>⚙️ Parámetros Adicionales</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="co2FactorFuel">Factor emisión combustible <span class="unit">(kg CO₂/kWh PCI)</span></label>
+          <input type="number" id="co2FactorFuel" value="0.252" min="0" step="0.001" />
+        </div>
+
+        <div class="form-group">
+          <label for="co2FactorElec">Factor emisión electricidad <span class="unit">(kg CO₂/kWh)</span></label>
+          <input type="number" id="co2FactorElec" value="0.30" min="0" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label for="primaryEnergyFuel">Energía primaria combustible <span class="unit">(kWhEP/kWh)</span></label>
+          <input type="number" id="primaryEnergyFuel" value="1.19" min="0" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label for="primaryEnergyElec">Energía primaria electricidad <span class="unit">(kWhEP/kWh)</span></label>
+          <input type="number" id="primaryEnergyElec" value="1.954" min="0" step="0.001" />
+        </div>
+      </div>
+
+      <div class="reference">
+        <strong>Factores de conversión según Anexo IV:</strong> Gas natural: 1.19 kWhEP/kWh | Gasóleo: 1.18 | Electricidad: 1.954 | CO₂ según RITE 2021
+      </div>
+
+      <div class="btn-actions">
+        <button class="btn btn-primary" onclick="calculateSavings()">🔄 Calcular ahorros</button>
+      </div>
+    </div>
+
+    <!-- Metodología -->
+    <div class="card">
+      <h2>📐 Metodología de Cálculo (según TER100)</h2>
+      
+      <div class="methodology">
+        <p><strong>1. Consumo energético sistema anterior:</strong></p>
+        <div class="formula">
+          Cant = Dcalef / (ηcaldera / 100)
+        </div>
+        
+        <p><strong>2. Consumo energético bomba de calor:</strong></p>
+        <div class="formula">
+          Cpos = Dcalef / SCOP
+        </div>
+        
+        <p><strong>3. Ahorro energía final:</strong></p>
+        <div class="formula">
+          AEF = Cant - Cpos
+        </div>
+        
+        <p><strong>4. Ahorro energía primaria (según Anexo V):</strong></p>
+        <div class="formula">
+          AETOTAL = (Cant × FEPcomb) - (Cpos × FEPelec)
+        </div>
+        
+        <p>Donde:</p>
+        <ul style="margin: 10px 0; padding-left: 25px;">
+          <li><strong>Dcalef:</strong> Demanda anual de calefacción (kWh/año)</li>
+          <li><strong>ηcaldera:</strong> Rendimiento estacional sistema anterior (%)</li>
+          <li><strong>SCOP:</strong> Coeficiente de rendimiento estacional bomba de calor</li>
+          <li><strong>FEPcomb:</strong> Factor conversión energía primaria combustible (kWhEP/kWh)</li>
+          <li><strong>FEPelec:</strong> Factor conversión energía primaria electricidad (kWhEP/kWh)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Resumen de resultados -->
+    <div class="card">
+      <h2>📊 Resumen de Resultados</h2>
+      
+      <div class="summary-grid">
+        <div class="summary-item warning">
+          <div class="summary-label">Consumo Anterior (Cant)</div>
+          <div class="summary-value"><span id="consumptionOld">0</span> <span class="summary-unit">kWh/año</span></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Consumo Bomba Calor (Cpos)</div>
+          <div class="summary-value"><span id="consumptionNew">0</span> <span class="summary-unit">kWh/año</span></div>
+        </div>
+        <div class="summary-item success">
+          <div class="summary-label">Ahorro Energía Final (AEF)</div>
+          <div class="summary-value"><span id="savingsEF">0</span> <span class="summary-unit">kWh/año</span></div>
+        </div>
+        <div class="summary-item success">
+          <div class="summary-label">Ahorro Energía Primaria (AETOTAL)</div>
+          <div class="summary-value"><span id="savingsEP">0</span> <span class="summary-unit">kWhEP/año</span></div>
+        </div>
+      </div>
+
+      <div class="summary-grid" style="margin-top: 20px;">
+        <div class="summary-item warning">
+          <div class="summary-label">Coste Anual Anterior</div>
+          <div class="summary-value"><span id="costOld">0</span> <span class="summary-unit">€/año</span></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Coste Anual Nuevo</div>
+          <div class="summary-value"><span id="costNew">0</span> <span class="summary-unit">€/año</span></div>
+        </div>
+        <div class="summary-item warning">
+          <div class="summary-label">Ahorro Económico Anual</div>
+          <div class="summary-value"><span id="costSavings">0</span> <span class="summary-unit">€/año</span></div>
+        </div>
+        <div class="summary-item success">
+          <div class="summary-label">Reducción Emisiones CO₂</div>
+          <div class="summary-value"><span id="co2Reduction">0</span> <span class="summary-unit">kg/año</span></div>
+        </div>
+      </div>
+
+      <div class="summary-grid" style="margin-top: 20px;">
+        <div class="summary-item">
+          <div class="summary-label">Reducción Consumo</div>
+          <div class="summary-value"><span id="consumptionReduction">0</span> <span class="summary-unit">%</span></div>
+        </div>
+        <div class="summary-item warning">
+          <div class="summary-label">Ahorro 10 años</div>
+          <div class="summary-value"><span id="savings10years">0</span> <span class="summary-unit">€</span></div>
+        </div>
+        <div class="summary-item success">
+          <div class="summary-label">Ahorro 20 años</div>
+          <div class="summary-value"><span id="savings20years">0</span> <span class="summary-unit">€</span></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Ratio Eficiencia</div>
+          <div class="summary-value"><span id="efficiencyRatio">0</span> <span class="summary-unit">-</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="card">
+      <h2>📈 Análisis Gráfico</h2>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+        <div>
+          <h3>Comparativa de Consumo Energético</h3>
+          <div class="chart-container">
+            <canvas id="consumptionChart"></canvas>
+          </div>
+        </div>
+        <div>
+          <h3>Comparativa de Costes Anuales</h3>
+          <div class="chart-container">
+            <canvas id="costChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <h3>Proyección de Ahorros Acumulados</h3>
+        <div class="chart-container">
+          <canvas id="projectionChart"></canvas>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <h3>Balance Energético Comparativo</h3>
+        <div class="chart-container">
+          <canvas id="energyBalanceChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de análisis detallado -->
+    <div class="card">
+      <h2>📋 Análisis Detallado</h2>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th>Sistema Anterior</th>
+            <th>Bomba de Calor</th>
+            <th>Diferencia</th>
+          </tr>
+        </thead>
+        <tbody id="detailTable">
+          <tr>
+            <td><strong>Demanda térmica anual</strong></td>
+            <td id="demandOld">-</td>
+            <td id="demandNew">-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td><strong>Consumo energía final</strong></td>
+            <td id="consumptionOldDetail">-</td>
+            <td id="consumptionNewDetail">-</td>
+            <td id="consumptionDiff">-</td>
+          </tr>
+          <tr>
+            <td><strong>Consumo energía primaria</strong></td>
+            <td id="primaryOld">-</td>
+            <td id="primaryNew">-</td>
+            <td id="primaryDiff">-</td>
+          </tr>
+          <tr>
+            <td><strong>Coste energético</strong></td>
+            <td id="costOldDetail">-</td>
+            <td id="costNewDetail">-</td>
+            <td id="costDiffDetail">-</td>
+          </tr>
+          <tr>
+            <td><strong>Emisiones CO₂</strong></td>
+            <td id="emissionsOld">-</td>
+            <td id="emissionsNew">-</td>
+            <td id="emissionsDiff">-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Botones de exportación -->
+    <div class="card">
+      <h2>💾 Exportar Informe</h2>
+      <div class="btn-actions">
+        <button class="btn btn-export" onclick="exportToPDF()">📄 Descargar PDF</button>
+        <button class="btn btn-export" onclick="exportToCSV()">📊 Exportar CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let consumptionChart, costChart, projectionChart, energyBalanceChart;
+
+    // Factores de emisión CO₂ por combustible (kg CO₂/kWh PCI) - Anexo IV
+    const co2Factors = {
+      gasNatural: 0.252,
+      gasoleo: 0.311,
+      GLP: 0.254,
+      carbon: 0.472,
+      biomasa: 0.018
+    };
+
+    // Factores de energía primaria (kWhEP/kWh) - Anexo IV
+    const primaryEnergyFactors = {
+      gasNatural: 1.190,
+      gasoleo: 1.179,
+      GLP: 1.201,
+      carbon: 1.082,
+      biomasa: 1.003,
+      electricidad: 1.954
+    };
+
+    // Actualizar factores al cambiar combustible
+    document.getElementById('fuelType').addEventListener('change', function() {
+      const fuelType = this.value;
+      document.getElementById('co2FactorFuel').value = co2Factors[fuelType] || 0.252;
+      document.getElementById('primaryEnergyFuel').value = primaryEnergyFactors[fuelType] || 1.19;
+      calculateSavings();
+    });
+
+    // Recalcular al cambiar inputs
+    const inputs = ['boilerPower', 'boilerEfficiency', 'fuelPrice', 'heatPumpPower', 'scop', 
+                    'electricityPrice', 'heatedArea', 'annualDemand', 'co2FactorFuel', 
+                    'co2FactorElec', 'primaryEnergyFuel', 'primaryEnergyElec'];
+    
+    inputs.forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateSavings);
+    });
+
+    document.getElementById('climateZone').addEventListener('change', calculateSavings);
+    document.getElementById('buildingType').addEventListener('change', calculateSavings);
+    document.getElementById('heatPumpType').addEventListener('change', calculateSavings);
+
+    function calculateSavings() {
+      // Parámetros sistema anterior
+      const boilerEfficiency = parseFloat(document.getElementById('boilerEfficiency').value) || 85;
+      const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0.06;
+      
+      // Parámetros bomba de calor
+      const scop = parseFloat(document.getElementById('scop').value) || 3.5;
+      const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0.15;
+      
+      // Demanda térmica
+      const annualDemand = parseFloat(document.getElementById('annualDemand').value) || 150000;
+      
+      // Factores de conversión
+      const co2FactorFuel = parseFloat(document.getElementById('co2FactorFuel').value) || 0.252;
+      const co2FactorElec = parseFloat(document.getElementById('co2FactorElec').value) || 0.30;
+      const primaryEnergyFuel = parseFloat(document.getElementById('primaryEnergyFuel').value) || 1.19;
+      const primaryEnergyElec = parseFloat(document.getElementById('primaryEnergyElec').value) || 1.954;
+      
+      // CÁLCULOS SEGÚN TER100
+      
+      // 1. Consumo energético sistema anterior (Cant)
+      const consumptionOld = annualDemand / (boilerEfficiency / 100);
+      
+      // 2. Consumo energético bomba de calor (Cpos)
+      const consumptionNew = annualDemand / scop;
+      
+      // 3. Ahorro energía final (AEF)
+      const savingsEF = consumptionOld - consumptionNew;
+      
+      // 4. Consumo energía primaria
+      const primaryEnergyOld = consumptionOld * primaryEnergyFuel;
+      const primaryEnergyNew = consumptionNew * primaryEnergyElec;
+      
+      // 5. Ahorro energía primaria (AETOTAL)
+      const savingsEP = primaryEnergyOld - primaryEnergyNew;
+      
+      // 6. Costes
+      const costOld = consumptionOld * fuelPrice;
+      const costNew = consumptionNew * electricityPrice;
+      const costSavings = costOld - costNew;
+      
+      // 7. Emisiones CO₂
+      const emissionsOld = consumptionOld * co2FactorFuel;
+      const emissionsNew = consumptionNew * co2FactorElec;
+      const co2Reduction = emissionsOld - emissionsNew;
+      
+      // 8. Indicadores adicionales
+      const consumptionReduction = consumptionOld > 0 ? ((savingsEF / consumptionOld) * 100) : 0;
+      const savings10years = costSavings * 10;
+      const savings20years = costSavings * 20;
+      const efficiencyRatio = scop / (boilerEfficiency / 100);
+      
+      // Actualizar resumen
+      document.getElementById('consumptionOld').textContent = Math.round(consumptionOld).toLocaleString();
+      document.getElementById('consumptionNew').textContent = Math.round(consumptionNew).toLocaleString();
+      document.getElementById('savingsEF').textContent = Math.round(savingsEF).toLocaleString();
+      document.getElementById('savingsEP').textContent = Math.round(savingsEP).toLocaleString();
+      document.getElementById('costOld').textContent = Math.round(costOld).toLocaleString();
+      document.getElementById('costNew').textContent = Math.round(costNew).toLocaleString();
+      document.getElementById('costSavings').textContent = Math.round(costSavings).toLocaleString();
+      document.getElementById('co2Reduction').textContent = Math.round(co2Reduction).toLocaleString();
+      document.getElementById('consumptionReduction').textContent = consumptionReduction.toFixed(1);
+      document.getElementById('savings10years').textContent = Math.round(savings10years).toLocaleString();
+      document.getElementById('savings20years').textContent = Math.round(savings20years).toLocaleString();
+      document.getElementById('efficiencyRatio').textContent = efficiencyRatio.toFixed(2);
+      
+      // Actualizar tabla detallada
+      document.getElementById('demandOld').textContent = `${Math.round(annualDemand).toLocaleString()} kWh/año`;
+      document.getElementById('demandNew').textContent = `${Math.round(annualDemand).toLocaleString()} kWh/año`;
+      document.getElementById('consumptionOldDetail').textContent = `${Math.round(consumptionOld).toLocaleString()} kWh/año`;
+      document.getElementById('consumptionNewDetail').textContent = `${Math.round(consumptionNew).toLocaleString()} kWh/año`;
+      document.getElementById('consumptionDiff').textContent = `${Math.round(savingsEF).toLocaleString()} kWh/año (${consumptionReduction.toFixed(1)}%)`;
+      document.getElementById('primaryOld').textContent = `${Math.round(primaryEnergyOld).toLocaleString()} kWhEP/año`;
+      document.getElementById('primaryNew').textContent = `${Math.round(primaryEnergyNew).toLocaleString()} kWhEP/año`;
+      document.getElementById('primaryDiff').textContent = `${Math.round(savingsEP).toLocaleString()} kWhEP/año`;
+      document.getElementById('costOldDetail').textContent = `${Math.round(costOld).toLocaleString()} €/año`;
+      document.getElementById('costNewDetail').textContent = `${Math.round(costNew).toLocaleString()} €/año`;
+      document.getElementById('costDiffDetail').textContent = `${Math.round(costSavings).toLocaleString()} €/año`;
+      document.getElementById('emissionsOld').textContent = `${Math.round(emissionsOld).toLocaleString()} kg CO₂/año`;
+      document.getElementById('emissionsNew').textContent = `${Math.round(emissionsNew).toLocaleString()} kg CO₂/año`;
+      document.getElementById('emissionsDiff').textContent = `${Math.round(co2Reduction).toLocaleString()} kg CO₂/año`;
+      
+      // Actualizar gráficos
+      updateCharts(consumptionOld, consumptionNew, costOld, costNew, costSavings, 
+                   primaryEnergyOld, primaryEnergyNew, emissionsOld, emissionsNew);
+    }
+
+    function updateCharts(consumptionOld, consumptionNew, costOld, costNew, annualSavings,
+                         primaryOld, primaryNew, emissionsOld, emissionsNew) {
+      const onaColors = {
+        tealDark: '#006B7D',
+        teal: '#008B9C',
+        tealLight: '#00A8BD',
+        success: '#28A745',
+        warning: '#FFC107'
+      };
+
+      // Gráfico de consumo
+      const ctxConsumption = document.getElementById('consumptionChart').getContext('2d');
+      if (consumptionChart) consumptionChart.destroy();
+      
+      consumptionChart = new Chart(ctxConsumption, {
+        type: 'bar',
+        data: {
+          labels: ['Sistema Anterior', 'Bomba de Calor'],
+          datasets: [{
+            label: 'Consumo Energía Final (kWh/año)',
+            data: [consumptionOld, consumptionNew],
+            backgroundColor: [onaColors.warning, onaColors.success],
+            borderColor: [onaColors.warning, onaColors.success],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Consumo (kWh/año)' },
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Gráfico de costes
+      const ctxCost = document.getElementById('costChart').getContext('2d');
+      if (costChart) costChart.destroy();
+      
+      costChart = new Chart(ctxCost, {
+        type: 'bar',
+        data: {
+          labels: ['Sistema Anterior', 'Bomba de Calor'],
+          datasets: [{
+            label: 'Coste Anual (€/año)',
+            data: [costOld, costNew],
+            backgroundColor: [onaColors.warning, onaColors.teal],
+            borderColor: [onaColors.warning, onaColors.teal],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Coste (€/año)' },
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString() + ' €';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Gráfico de proyección
+      const years = [1, 2, 3, 5, 10, 15, 20, 25];
+      const ctxProjection = document.getElementById('projectionChart').getContext('2d');
+      if (projectionChart) projectionChart.destroy();
+      
+      projectionChart = new Chart(ctxProjection, {
+        type: 'line',
+        data: {
+          labels: years.map(y => `Año ${y}`),
+          datasets: [{
+            label: 'Ahorro Acumulado (€)',
+            data: years.map(y => annualSavings * y),
+            borderColor: onaColors.teal,
+            backgroundColor: 'rgba(0, 139, 156, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Ahorro Acumulado (€)' },
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString() + ' €';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Gráfico de balance energético
+      const ctxBalance = document.getElementById('energyBalanceChart').getContext('2d');
+      if (energyBalanceChart) energyBalanceChart.destroy();
+      
+      energyBalanceChart = new Chart(ctxBalance, {
+        type: 'bar',
+        data: {
+          labels: ['Energía Primaria', 'Emisiones CO₂'],
+          datasets: [
+            {
+              label: 'Sistema Anterior',
+              data: [primaryOld, emissionsOld],
+              backgroundColor: onaColors.warning,
+              borderColor: onaColors.warning,
+              borderWidth: 2
+            },
+            {
+              label: 'Bomba de Calor',
+              data: [primaryNew, emissionsNew],
+              backgroundColor: onaColors.success,
+              borderColor: onaColors.success,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Título
+      doc.setFontSize(18);
+      doc.setTextColor(0, 107, 125);
+      doc.text('Informe de Ahorro Energético', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setTextColor(108, 117, 125);
+      doc.text('Sustitución Caldera por Bomba de Calor - Ficha TER100', 105, 28, { align: 'center' });
+      
+      // Fecha
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 40);
+      
+      // Parámetros
+      doc.setFontSize(14);
+      doc.setTextColor(0, 107, 125);
+      doc.text('Sistema Existente', 20, 50);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const fuelType = document.getElementById('fuelType').selectedOptions[0].text;
+      const boilerPower = document.getElementById('boilerPower').value;
+      const boilerEff = document.getElementById('boilerEfficiency').value;
+      
+      doc.text(`Combustible: ${fuelType}`, 20, 58);
+      doc.text(`Potencia caldera: ${boilerPower} kW`, 20, 65);
+      doc.text(`Rendimiento: ${boilerEff}%`, 20, 72);
+      
+      doc.setFontSize(14);
+      doc.setTextColor(0, 107, 125);
+      doc.text('Nueva Bomba de Calor', 20, 85);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const hpType = document.getElementById('heatPumpType').selectedOptions[0].text;
+      const hpPower = document.getElementById('heatPumpPower').value;
+      const scop = document.getElementById('scop').value;
+      
+      doc.text(`Tipo: ${hpType}`, 20, 93);
+      doc.text(`Potencia: ${hpPower} kW`, 20, 100);
+      doc.text(`SCOP: ${scop}`, 20, 107);
+      
+      // Resultados
+      doc.setFontSize(14);
+      doc.setTextColor(0, 107, 125);
+      doc.text('Resultados Principales', 20, 120);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const consumptionOld = document.getElementById('consumptionOld').textContent;
+      const consumptionNew = document.getElementById('consumptionNew').textContent;
+      const savingsEF = document.getElementById('savingsEF').textContent;
+      const savingsEP = document.getElementById('savingsEP').textContent;
+      const costSavings = document.getElementById('costSavings').textContent;
+      const co2Reduction = document.getElementById('co2Reduction').textContent;
+      
+      doc.text(`Consumo anterior: ${consumptionOld} kWh/año`, 20, 128);
+      doc.text(`Consumo bomba de calor: ${consumptionNew} kWh/año`, 20, 135);
+      doc.text(`Ahorro energía final: ${savingsEF} kWh/año`, 20, 142);
+      doc.text(`Ahorro energía primaria: ${savingsEP} kWhEP/año`, 20, 149);
+      doc.text(`Ahorro económico: ${costSavings} €/año`, 20, 156);
+      doc.text(`Reducción CO₂: ${co2Reduction} kg/año`, 20, 163);
+      
+      // Metodología
+      doc.setFontSize(14);
+      doc.setTextColor(0, 107, 125);
+      doc.text('Metodología (TER100)', 20, 176);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Cant = Dcalef / (ηcaldera / 100)', 20, 184);
+      doc.text('Cpos = Dcalef / SCOP', 20, 191);
+      doc.text('AETOTAL = (Cant × FEPcomb) - (Cpos × FEPelec)', 20, 198);
+      
+      // Guardar
+      doc.save('Informe_Ahorro_Bomba_Calor.pdf');
+    }
+
+    function exportToCSV() {
+      const annualDemand = document.getElementById('annualDemand').value;
+      const fuelType = document.getElementById('fuelType').selectedOptions[0].text;
+      const hpType = document.getElementById('heatPumpType').selectedOptions[0].text;
+      
+      let csv = 'Informe de Ahorro Energético - Bomba de Calor\n';
+      csv += 'Ficha TER100 - Sustitución Caldera por Bomba de Calor\n\n';
+      csv += `Fecha:,${new Date().toLocaleDateString('es-ES')}\n\n`;
+      
+      csv += 'SISTEMA EXISTENTE\n';
+      csv += `Combustible:,${fuelType}\n`;
+      csv += `Potencia caldera (kW):,${document.getElementById('boilerPower').value}\n`;
+      csv += `Rendimiento (%):,${document.getElementById('boilerEfficiency').value}\n`;
+      csv += `Precio combustible (€/kWh):,${document.getElementById('fuelPrice').value}\n\n`;
+      
+      csv += 'BOMBA DE CALOR\n';
+      csv += `Tipo:,${hpType}\n`;
+      csv += `Potencia (kW):,${document.getElementById('heatPumpPower').value}\n`;
+      csv += `SCOP:,${document.getElementById('scop').value}\n`;
+      csv += `Precio electricidad (€/kWh):,${document.getElementById('electricityPrice').value}\n\n`;
+      
+      csv += 'DEMANDA TÉRMICA\n';
+      csv += `Zona climática:,${document.getElementById('climateZone').selectedOptions[0].text}\n`;
+      csv += `Tipo edificio:,${document.getElementById('buildingType').selectedOptions[0].text}\n`;
+      csv += `Superficie climatizada (m²):,${document.getElementById('heatedArea').value}\n`;
+      csv += `Demanda anual (kWh/año):,${annualDemand}\n\n`;
+      
+      csv += 'RESULTADOS\n';
+      csv += `Consumo anterior (kWh/año):,${document.getElementById('consumptionOld').textContent}\n`;
+      csv += `Consumo bomba calor (kWh/año):,${document.getElementById('consumptionNew').textContent}\n`;
+      csv += `Ahorro energía final (kWh/año):,${document.getElementById('savingsEF').textContent}\n`;
+      csv += `Ahorro energía primaria (kWhEP/año):,${document.getElementById('savingsEP').textContent}\n`;
+      csv += `Coste anterior (€/año):,${document.getElementById('costOld').textContent}\n`;
+      csv += `Coste nuevo (€/año):,${document.getElementById('costNew').textContent}\n`;
+      csv += `Ahorro económico (€/año):,${document.getElementById('costSavings').textContent}\n`;
+      csv += `Reducción CO₂ (kg/año):,${document.getElementById('co2Reduction').textContent}\n`;
+      csv += `Reducción consumo (%):,${document.getElementById('consumptionReduction').textContent}\n`;
+      csv += `Ahorro 10 años (€):,${document.getElementById('savings10years').textContent}\n`;
+      csv += `Ahorro 20 años (€):,${document.getElementById('savings20years').textContent}\n`;
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'Ahorro_Bomba_Calor.csv';
+      link.click();
+    }
+
+    // Calcular al cargar
+    calculateSavings();
+  </script>
+</body>
+</html>
